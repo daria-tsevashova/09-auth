@@ -1,25 +1,32 @@
-export const metadata = {
+import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
+import { cookies } from "next/headers";
+import { getMe } from "@/lib/api/serverApi";
+import css from "./ProfilePage.module.css";
+
+export const metadata: Metadata = {
   title: "Profile | NoteHub",
   description: "User profile page — view and edit your profile.",
 };
 
-import Image from "next/image";
-import css from "./ProfilePage.module.css";
+export default async function ProfilePage() {
+  const cookieStore = await cookies();
+  const user = await getMe({ cookies: cookieStore.toString() });
 
-export default function ProfilePage() {
   return (
     <main className={css.mainContent}>
       <div className={css.profileCard}>
         <div className={css.header}>
           <h1 className={css.formTitle}>Profile Page</h1>
-          <a href="#" className={css.editProfileButton}>
+          <Link href="/profile/edit" className={css.editProfileButton}>
             Edit Profile
-          </a>
+          </Link>
         </div>
 
         <div className={css.avatarWrapper}>
           <Image
-            src="https://ac.goit.global/avatar-placeholder.png"
+            src={user.avatar || "https://ac.goit.global/avatar-placeholder.png"}
             alt="User Avatar"
             width={120}
             height={120}
@@ -28,8 +35,8 @@ export default function ProfilePage() {
         </div>
 
         <div className={css.profileInfo}>
-          <p>Username: your_username</p>
-          <p>Email: your_email@example.com</p>
+          <p>Username: {user.username}</p>
+          <p>Email: {user.email}</p>
         </div>
       </div>
     </main>

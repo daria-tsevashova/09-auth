@@ -1,28 +1,46 @@
 import { NextRequest, NextResponse } from "next/server";
+import { checkSession } from "./lib/api/serverApi";
 
 const PRIVATE_PREFIXES = ["/profile", "/notes"];
 const AUTH_PREFIXES = ["/sign-in", "/sign-up"];
 
-export function proxy(request: NextRequest) {
+function getCookie(cookies: string, name: string): string | null {
+  const value = `; ${cookies}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) {
+    return parts.pop()?.split(";").shift() || null;
+  }
+  return null;
+}
+
+export async function proxy(request: NextRequest) {
   const url = new URL(request.url);
   const pathname = url.pathname;
 
-  const cookie = request.headers.get("cookie") ?? "";
+  const cookieHeader = request.headers.get("cookie") ?? "";
 
-  // Перевіряємо наявність accessToken в cookies
-  const hasAccessToken = cookie.includes("accessToken=");
+  const accessToken = getCookie(cookieHeader, "accessToken");
+  const refreshToken = getCookie(cookieHeader, "refreshToken");
 
   const isPrivate = PRIVATE_PREFIXES.some((p) => pathname.startsWith(p));
   const isAuthRoute = AUTH_PREFIXES.some((p) => pathname.startsWith(p));
 
-  // Якщо намагаємося потрапити на приватну сторінку без токена
-  if (isPrivate && !hasAccessToken) {
+  let isAuthenticated = false;
+  if (accessToken || refreshToken) {
+    try {
+      const user = await checkSession({ cookies: cookieHeader });
+      isAuthenticated = !!user;
+    } catch {
+      isAuthenticated = false;
+    }
+  }
+
+  if (isPrivate && !isAuthenticated) {
     return NextResponse.redirect(new URL("/sign-in", url));
   }
 
-  // Якщо авторизовані і йдемо на auth сторінки - редірект на профіль
-  if (isAuthRoute && hasAccessToken) {
-    return NextResponse.redirect(new URL("/profile", url));
+  if (isAuthRoute && isAuthenticated) {
+    return NextResponse.redirect(new URL("/", url));
   }
 
   return NextResponse.next();

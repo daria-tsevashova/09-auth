@@ -5,7 +5,6 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
 import { useDebounce } from "use-debounce";
 import { useState } from "react";
-import { fetchNotes } from "@/lib/api/api";
 import Loader from "@/components/Loader/Loader";
 import ErrorMessage from "@/components/ErrorMessage/ErrorMessage";
 import NoteList from "@/components/NoteList/NoteList";
@@ -13,6 +12,7 @@ import Pagination from "@/components/Pagination/Pagination";
 import SearchBox from "@/components/SearchBox/SearchBox";
 import type { NoteTag } from "@/types/note";
 import Link from "next/link";
+import { fetchNotes } from "@/lib/api/clientApi";
 
 interface NotesClientProps {
   tag: NoteTag | "all";
@@ -26,7 +26,11 @@ const NotesClient = ({ tag }: NotesClientProps) => {
   const { data, error, isLoading, isSuccess } = useQuery({
     queryKey: ["notes", debouncedTerm, currentPage, tag],
     queryFn: () =>
-      fetchNotes(debouncedTerm, currentPage, tag !== "all" ? tag : undefined),
+      fetchNotes({
+        search: debouncedTerm,
+        page: currentPage,
+        tag: tag !== "all" ? tag : undefined,
+      }),
     placeholderData: keepPreviousData,
   });
 
@@ -42,11 +46,11 @@ const NotesClient = ({ tag }: NotesClientProps) => {
       <header className={css.toolbar}>
         <SearchBox onChange={onChange} value={query} />
 
-        {isSuccess && data.totalPages > 1 && (
+        {isSuccess && data && data.notes.length > 0 && (
           <Pagination
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
-            totalPages={data.totalPages}
+            totalPages={Math.ceil(data.totalPages / 10)}
           />
         )}
 
@@ -57,7 +61,7 @@ const NotesClient = ({ tag }: NotesClientProps) => {
 
       {isLoading && <Loader />}
       {error && <ErrorMessage />}
-      {data && data.notes.length > 0 && <NoteList notes={data.notes} />}
+      {data && data && data.notes.length > 0 && <NoteList notes={data.notes} />}
     </div>
   );
 };

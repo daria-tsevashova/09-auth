@@ -4,7 +4,7 @@ import {
   dehydrate,
 } from "@tanstack/react-query";
 import type { Metadata } from "next";
-import { fetchNotes } from "@/lib/api/api";
+import { fetchNotes } from "@/lib/api/serverApi";
 import NotesClient from "./Notes.client";
 import { NoteTag } from "@/types/note";
 
@@ -21,8 +21,10 @@ export default async function NotesPage({
 
   await queryClient.prefetchQuery({
     queryKey: ["notes", { tag: tag ?? "all" }],
-    queryFn: () => fetchNotes("", 1, tag),
+    queryFn: () =>
+      fetchNotes({ tag, page: 1 }, { cookies: cookieStore.toString() }),
   });
+
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
       <NotesClient tag={tag ?? "all"} />

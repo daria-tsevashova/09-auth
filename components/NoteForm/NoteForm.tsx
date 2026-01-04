@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import css from "./NoteForm.module.css";
-import { createNote } from "@/lib/api/api";
+import { createNote } from "@/lib/api/clientApi";
 import { useNoteDraftStore } from "@/lib/store/noteStore";
 import type { CreateNoteData } from "@/types/note";
 
@@ -36,7 +36,11 @@ const NoteForm = ({ onClose, formAction }: NoteFormProps) => {
   });
 
   const onChangeField = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    (
+      e: React.ChangeEvent<
+        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+      >
+    ) => {
       const { name, value } = e.target;
       setDraft({ ...draft, [name]: value } as CreateNoteData);
     },

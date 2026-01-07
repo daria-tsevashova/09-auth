@@ -79,9 +79,10 @@ export async function createNote(payload: CreateNoteData): Promise<Note> {
   return res.data;
 }
 
-export async function deleteNote(id: string): Promise<void> {
-  const res = await api.delete(`/notes/${id}`);
+export async function deleteNote(id: string): Promise<Note> {
+  const res = await api.delete<Note>(`/notes/${id}`);
   if (res.status >= 400) {
     throw new Error("Delete failed");
   }
+  return res.data;
 }

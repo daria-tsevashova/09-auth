@@ -4,7 +4,7 @@ import { parse } from "cookie";
 import { checkSession } from "./lib/api/serverApi";
 
 const publicRoutes = ["/sign-in", "/sign-up"];
-const privateRoutes = ["/profile"];
+const privateRoutes = ["/profile", "/notes", "/notes/filter"];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -43,8 +43,6 @@ export async function proxy(request: NextRequest) {
             cookieStore.set("refreshToken", parsed.refreshToken, options);
         }
 
-        // Якщо сесія оновлена - дозволяємо доступ
-        // AuthProvider обробить редірект для авторизованих на публічних маршрутах
         return NextResponse.next({
           headers: {
             Cookie: cookieStore.toString(),
@@ -62,11 +60,15 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Якщо є accessToken - дозволяємо доступ
-  // AuthProvider сам обробить редірект з публічних маршрутів
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/profile/:path*", "/sign-in", "/sign-up"],
+  matcher: [
+    "/profile/:path*",
+    "/sign-in",
+    "/sign-up",
+    "/notes/:path*",
+    "/notes/filter/:path*",
+  ],
 };

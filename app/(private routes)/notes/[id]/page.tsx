@@ -1,4 +1,4 @@
-import { fetchNoteById } from "@/lib/api/clientApi";
+import { fetchNoteById } from "@/lib/api/serverApi";
 import type { Metadata } from "next";
 import {
   dehydrate,
@@ -57,7 +57,7 @@ export async function generateMetadata({
         ],
       },
     };
-  } catch (err) {
+  } catch {
     return {
       title: "Note Hub — Note",
       description: "Note details could not be loaded.",

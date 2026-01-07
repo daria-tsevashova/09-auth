@@ -50,7 +50,7 @@ const NotesClient = ({ tag }: NotesClientProps) => {
           <Pagination
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
-            totalPages={Math.ceil(data.totalPages / 10)}
+            totalPages={data.totalPages}
           />
         )}
 

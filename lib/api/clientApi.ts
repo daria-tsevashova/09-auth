@@ -1,6 +1,6 @@
 import { api } from "./api";
 import { User } from "@/types/user";
-import { Note, CreateNoteData, NoteTag } from "@/types/note";
+import { Note, CreateNoteData } from "@/types/note";
 
 // Auth
 export type LoginRequest = { email: string; password: string };

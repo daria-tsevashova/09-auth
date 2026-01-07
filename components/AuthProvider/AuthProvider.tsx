@@ -2,46 +2,53 @@
 
 import { ReactNode, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import useAuthStore, { AuthState } from "@/lib/store/authStore";
+import useAuthStore from "@/lib/store/authStore";
 import { checkSession } from "@/lib/api/clientApi";
 
 export default function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const setUser = useAuthStore((s: AuthState) => s.setUser);
-  const clearIsAuthenticated = useAuthStore((s: AuthState) => s.clearIsAuthenticated);
-  const logout = useAuthStore((s: AuthState) => s.logout);
+  const setUser = useAuthStore((s) => s.setUser);
+  const clearIsAuthenticated = useAuthStore((s) => s.clearIsAuthenticated);
   const [checking, setChecking] = useState(true);
 
-  const isPrivateRoute = (p: string) => p.startsWith("/profile") || p.startsWith("/notes");
+  const isPrivateRoute = (p: string) =>
+    p.startsWith("/profile") || p.startsWith("/notes");
+
+  const isPublicRoute = (p: string) =>
+    p.startsWith("/sign-in") || p.startsWith("/sign-up");
 
   useEffect(() => {
     let mounted = true;
+
     async function verify() {
       setChecking(true);
       try {
         const user = await checkSession();
         if (!mounted) return;
+
         if (user) {
-          setUser(user);
-          // Якщо авторизований і на auth-сторінці — відправити на профіль
-          if (pathname && (pathname.startsWith("/sign-in") || pathname.startsWith("/sign-up"))) {
-            router.replace("/profile");
+          // Якщо на публічному маршруті - НЕ встановлюємо user
+          if (pathname && isPublicRoute(pathname)) {
+            clearIsAuthenticated();
+            setChecking(false);
+            return;
           }
+
+          setUser(user);
         } else {
-          // Не авторизований
+          // Явно очищаємо store якщо user немає
           clearIsAuthenticated();
+          // Редірект на sign-in якщо на приватній сторінці
           if (pathname && isPrivateRoute(pathname)) {
-            // Перехід на приватну сторінку — перекриваємо контент і редіректимо
-            await logout().catch(() => {});
             router.replace("/sign-in");
           }
         }
       } catch {
+        // При помилці теж очищаємо
         clearIsAuthenticated();
         if (pathname && isPrivateRoute(pathname)) {
-          await logout().catch(() => {});
           router.replace("/sign-in");
         }
       } finally {
@@ -53,12 +60,18 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       mounted = false;
     };
-    
-  }, [pathname]);
+  }, [pathname, router, setUser, clearIsAuthenticated]);
 
   if (checking) {
     return (
-      <div style={{ minHeight: "200px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div
+        style={{
+          minHeight: "200px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <span>Loading...</span>
       </div>
     );

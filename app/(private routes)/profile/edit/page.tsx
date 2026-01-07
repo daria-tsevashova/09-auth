@@ -13,24 +13,22 @@ export default function EditProfilePage() {
   const setUser = useAuthStore((state) => state.setUser);
 
   const [username, setUsername] = useState("");
-  const [avatar, setAvatar] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (user) {
       setUsername(user.username || "");
-      setAvatar(user.avatar || "");
     }
   }, [user]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (formData: FormData) => {
     setError("");
     setLoading(true);
 
     try {
-      const updatedUser = await updateUserProfile({ username, avatar });
+      const username = formData.get("username") as string;
+      const updatedUser = await updateUserProfile({ username });
       setUser(updatedUser);
       router.push("/profile");
     } catch (err) {
@@ -50,38 +48,25 @@ export default function EditProfilePage() {
       <div className={css.profileCard}>
         <h1 className={css.formTitle}>Edit Profile</h1>
 
-        {avatar && (
-          <Image
-            src={avatar || "https://ac.goit.global/avatar-placeholder.png"}
-            alt="User Avatar"
-            width={120}
-            height={120}
-            className={css.avatar}
-          />
-        )}
+        <Image
+          src={user?.avatar || "https://ac.goit.global/avatar-placeholder.png"}
+          alt="User Avatar"
+          width={120}
+          height={120}
+          className={css.avatar}
+        />
 
-        <form className={css.profileInfo} onSubmit={handleSubmit}>
+        <form className={css.profileInfo} action={handleSubmit}>
           <div className={css.usernameWrapper}>
             <label htmlFor="username">Username:</label>
             <input
               id="username"
+              name="username"
               type="text"
               className={css.input}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
-            />
-          </div>
-
-          <div className={css.usernameWrapper}>
-            <label htmlFor="avatar">Avatar URL:</label>
-            <input
-              id="avatar"
-              type="url"
-              className={css.input}
-              value={avatar}
-              onChange={(e) => setAvatar(e.target.value)}
-              placeholder="https://example.com/avatar.png"
             />
           </div>
 
